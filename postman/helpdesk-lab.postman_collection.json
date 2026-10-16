@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "9a73a42e-3c04-593b-975b-e83e8c10941d",
     "name": "helpdesk-lab – ПР3",
-    "description": "Стартова колекція до практичної роботи № 3. Додавайте запити й тести за методичними вказівками.",
+    "description": "Повна колекція запитів і автоматичних перевірок до практичної роботи № 3 з ОК «Розробка клієнт-серверних застосувань».",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -31,7 +31,18 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));"
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Content-Type є application/json\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Cache-Control дорівнює no-store\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\");",
+                  "});",
+                  "pm.test(\"Тіло містить status: ok та версію Node.js\", () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql(\"ok\");",
+                  "  pm.expect(body.node).to.be.a(\"string\");",
+                  "});"
                 ]
               }
             }
@@ -73,7 +84,84 @@
               }
             }
           },
-          "event": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "const login = pm.response.json();",
+                  "pm.collectionVariables.set(\"studentToken\", login.accessToken);",
+                  "pm.test(\"Отримано Bearer-токен здобувача\", () => {",
+                  "  pm.expect(login.accessToken).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(login.tokenType).to.eql(\"Bearer\");",
+                  "});",
+                  "pm.test(\"Роль користувача – student\", () => {",
+                  "  pm.expect(login.user.role).to.eql(\"student\");",
+                  "});",
+                  "pm.test(\"Заборонено кешування відповіді з токеном (no-store)\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Вхід адміністратора",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"o.shevchuk@college.example.ua\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "const login = pm.response.json();",
+                  "pm.collectionVariables.set(\"adminToken\", login.accessToken);",
+                  "pm.test(\"Отримано Bearer-токен адміністратора\", () => {",
+                  "  pm.expect(login.accessToken).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(login.tokenType).to.eql(\"Bearer\");",
+                  "});",
+                  "pm.test(\"Роль користувача – admin\", () => {",
+                  "  pm.expect(login.user.role).to.eql(\"admin\");",
+                  "});",
+                  "pm.test(\"Заборонено кешування відповіді з токеном (no-store)\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\");",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -81,7 +169,7 @@
       "name": "3. Заявки: читання",
       "item": [
         {
-          "name": "Список заявок",
+          "name": "Список заявок (200 OK)",
           "request": {
             "method": "GET",
             "header": [],
@@ -106,22 +194,918 @@
               ]
             }
           },
-          "event": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Наявні заголовки ETag та Cache-Control\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"ETag\")).to.be.a(\"string\");",
+                  "  pm.expect(pm.response.headers.get(\"Cache-Control\")).to.include(\"no-cache\");",
+                  "});",
+                  "pm.test(\"Структура пагінації коректна (items, page, pageSize, total)\", () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.items).to.be.an(\"array\").with.lengthOf(4);",
+                  "  pm.expect(body.page).to.eql(1);",
+                  "  pm.expect(body.pageSize).to.eql(4);",
+                  "  pm.expect(body.total).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Некоректні параметри (400 Bad Request)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets?page=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Структура Problem Details (status 400, title, detail)\", () => {",
+                  "  const err = pm.response.json();",
+                  "  pm.expect(err.status).to.eql(400);",
+                  "  pm.expect(err.title).to.eql(\"Некоректні параметри\");",
+                  "  pm.expect(err.detail).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Заявку не знайдено (404 Not Found)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Структура Problem Details (status 404, instance)\", () => {",
+                  "  const err = pm.response.json();",
+                  "  pm.expect(err.status).to.eql(404);",
+                  "  pm.expect(err.title).to.eql(\"Заявку не знайдено\");",
+                  "  pm.expect(err.instance).to.eql(\"/api/tickets/999\");",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "4. Заявки: зміна",
-      "item": []
+      "item": [
+        {
+          "name": "Створення заявки (201 Created)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Налаштувати мережевий принтер в ауд. 305\",\n  \"description\": \"Потрібен драйвер для Windows 11\",\n  \"priority\": \"medium\",\n  \"tags\": [\"принтер\", \"ауд-305\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 201\", () => pm.response.to.have.status(201));",
+                  "const ticket = pm.response.json();",
+                  "pm.test(\"Location вказує на новий ресурс\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Location\")).to.eql(`/api/tickets/${ticket.id}`));",
+                  "pm.collectionVariables.set(\"ticketId\", ticket.id);",
+                  "",
+                  "const schema = {",
+                  "  type: \"object\",",
+                  "  required: [\"id\", \"title\", \"status\", \"priority\", \"authorId\", \"assigneeId\", \"createdAt\", \"tags\"],",
+                  "  properties: {",
+                  "    id: { type: \"integer\" },",
+                  "    title: { type: \"string\" },",
+                  "    description: { type: \"string\" },",
+                  "    status: { type: \"string\", enum: [\"open\", \"in_progress\", \"resolved\", \"closed\"] },",
+                  "    priority: { type: \"string\", enum: [\"low\", \"medium\", \"high\", \"critical\"] },",
+                  "    authorId: { type: \"integer\" },",
+                  "    assigneeId: { type: [\"integer\", \"null\"] },",
+                  "    createdAt: { type: \"string\" },",
+                  "    tags: { type: \"array\", items: { type: \"string\" } }",
+                  "  }",
+                  "};",
+                  "pm.test(\"Відповідь відповідає JSON-схемі заявки\", () => {",
+                  "  pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Оновлення заявки PATCH (200 OK)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"high\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Content-Type є application/json\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Пріоритет заявки оновлено на high\", () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.eql(Number(pm.collectionVariables.get(\"ticketId\")));",
+                  "  pm.expect(body.priority).to.eql(\"high\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Без токена (401 Unauthorized)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Заявка без авторизації\",\n  \"priority\": \"low\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Наявний заголовок WWW-Authenticate\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"WWW-Authenticate\")).to.include(\"Bearer\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Критичний пріоритет від здобувача (403 Forbidden)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Термінова аварія сервера\",\n  \"priority\": \"critical\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Повідомлення пояснює обмеження прав ролі\", () => {",
+                  "  const err = pm.response.json();",
+                  "  pm.expect(err.status).to.eql(403);",
+                  "  pm.expect(err.title).to.eql(\"Доступ заборонено\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Метод не дозволено PUT (405 Method Not Allowed)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Спроба PUT\",\n  \"priority\": \"low\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 405\", () => pm.response.to.have.status(405));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Заголовок Allow перелічує дозволені методи (GET, HEAD, POST)\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Allow\")).to.eql(\"GET, HEAD, POST\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Недопустимий перехід стану open -> resolved (409 Conflict)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/{{ticketId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Тіло містить перелік дозволених переходів (allowed)\", () => {",
+                  "  const err = pm.response.json();",
+                  "  pm.expect(err.status).to.eql(409);",
+                  "  pm.expect(err.allowed).to.include(\"in_progress\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Непідтримуваний тип вмісту text/plain (415 Unsupported Media Type)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "title=Принтер&priority=low"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 415\", () => pm.response.to.have.status(415));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Повідомлення вимагає application/json\", () => {",
+                  "  const err = pm.response.json();",
+                  "  pm.expect(err.status).to.eql(415);",
+                  "  pm.expect(err.detail).to.include(\"application/json\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Помилка валідації порожній title (422 Unprocessable Content)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"priority\": \"invalid_priority\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Тіло містить масив помилок валідації errors\", () => {",
+                  "  const err = pm.response.json();",
+                  "  pm.expect(err.status).to.eql(422);",
+                  "  pm.expect(err.errors).to.be.an(\"array\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Видалення заявки адміністратором (204 No Content)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Тіло відповіді порожнє\", () => {",
+                  "  pm.expect(pm.response.text()).to.be.empty;",
+                  "});",
+                  "pm.test(\"Наявний заголовок X-Request-Id\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "5. Механізми HTTP",
-      "item": []
+      "item": [
+        {
+          "name": "1. Отримання заявки №1 та збереження ETag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "const etag = pm.response.headers.get(\"ETag\");",
+                  "pm.test(\"Заголовок ETag присутній\", () => pm.expect(etag).to.be.a(\"string\").and.not.empty);",
+                  "pm.collectionVariables.set(\"etag\", etag);",
+                  "pm.test(\"Повернуто заявку з id = 1\", () => {",
+                  "  pm.expect(pm.response.json().id).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Умовний запит з If-None-Match (304 Not Modified)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "If-None-Match",
+                "value": "{{etag}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 304 Not Modified\", () => pm.response.to.have.status(304));",
+                  "pm.test(\"Тіло відповіді порожнє\", () => pm.expect(pm.response.text()).to.be.empty);",
+                  "pm.test(\"ETag збігається зі збереженим\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"ETag\")).to.eql(pm.collectionVariables.get(\"etag\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Узгодження вмісту: Accept text/csv (200 OK)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/csv"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Content-Type є text/csv\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\");",
+                  "});",
+                  "pm.test(\"Заголовок Vary містить Accept\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Vary\")).to.include(\"Accept\");",
+                  "});",
+                  "pm.test(\"Тіло містить заголовок CSV-таблиці\", () => {",
+                  "  pm.expect(pm.response.text()).to.include(\"id,title,status,priority\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Узгодження вмісту: Accept application/xml (406 Not Acceptable)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/xml"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 406 Not Acceptable\", () => pm.response.to.have.status(406));",
+                  "pm.test(\"Формат application/problem+json\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));",
+                  "pm.test(\"Заголовок Vary: Accept присутній\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Vary\")).to.include(\"Accept\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Стиснення: Accept-Encoding gzip (200 OK)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Encoding",
+                "value": "gzip"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Заголовок Content-Encoding: gzip\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Encoding\")).to.eql(\"gzip\");",
+                  "});",
+                  "pm.test(\"Заголовок Vary містить Accept-Encoding\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Vary\")).to.include(\"Accept-Encoding\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Переспрямування: /api/old-tickets без автопереходу (301 Moved Permanently)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/old-tickets?status=open",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "old-tickets"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 301 Moved Permanently\", () => pm.response.to.have.status(301));",
+                  "pm.test(\"Location вказує на /api/tickets?status=open\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/api/tickets?status=open\");",
+                  "});",
+                  "pm.test(\"Тіло відповіді порожнє\", () => {",
+                  "  pm.expect(pm.response.text()).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Обмеження частоти: /api/limited (200 OK)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/limited",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "limited"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Наявні заголовки RateLimit-Limit та RateLimit-Remaining\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"RateLimit-Limit\")).to.eql(\"5\");",
+                  "  pm.expect(pm.response.headers.get(\"RateLimit-Remaining\")).to.be.a(\"string\");",
+                  "});",
+                  "pm.test(\"Тіло містить ok: true\", () => {",
+                  "  pm.expect(pm.response.json().ok).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. CORS у Postman: Origin http://localhost:5500 (200 OK)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "http://localhost:5500"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200 (Postman не блокує відповідь без CORS-заголовків)\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Заголовок Access-Control-Allow-Origin відсутній (ALLOWED_ORIGINS порожній)\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.be.undefined;",
+                  "});",
+                  "pm.test(\"Дані заявок успішно отримано\", () => {",
+                  "  pm.expect(pm.response.json().items).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
     {
       "key": "studentToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "ticketId",
+      "value": ""
+    },
+    {
+      "key": "etag",
       "value": ""
     }
   ]
