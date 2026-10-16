@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Служба підтримки коледжу</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <img src="/static/logo.svg" alt="" width="40" height="40">
+    <h1>Служба технічної підтримки коледжу</h1>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Вхід</h2>
+      <form id="login">
+        <input name="email" type="email" value="a.petrenko@college.example.ua" aria-label="Email">
+        <input name="password" type="password" value="student123" aria-label="Пароль">
+        <button>Увійти</button>
+      </form>
+      <p id="who">Не автентифіковано</p>
+    </section>
+    <section class="card">
+      <h2>Нова заявка</h2>
+      <form id="create">
+        <input name="title" placeholder="Що сталося?" aria-label="Назва">
+        <select name="priority" aria-label="Пріоритет">
+          <option>low</option><option selected>medium</option><option>high</option><option>critical</option>
+        </select>
+        <button>Створити</button>
+      </form>
+      <p id="createResult"></p>
+    </section>
+    <section class="card wide">
+      <h2>Заявки <button id="reload" type="button">Оновити</button> <button id="slow" type="button">Повільний запит</button></h2>
+      <table>
+        <thead><tr><th>#</th><th>Назва</th><th>Стан</th><th>Пріоритет</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p id="meta"></p>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

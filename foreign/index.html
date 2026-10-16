@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <title>Сторонній сайт (інше джерело)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; max-width: 800px; }
+    button { font: inherit; padding: 8px 14px; margin: 4px 8px 4px 0; }
+    pre { background: #14213d; color: #e6ecf5; padding: 12px; border-radius: 6px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Сторонній сайт: http://localhost:5500</h1>
+  <p>Ця сторінка завантажена з <b>іншого джерела</b> (інший порт) і звертається до API на http://localhost:3000.
+     Відкрийте інструменти розробника (F12) – вкладки Console і Network.</p>
+  <button id="simple">1. Простий запит: GET /api/tickets</button>
+  <button id="preflight">2. Запит із попереднім: POST /api/tickets (JSON + Authorization)</button>
+  <pre id="out">Натисніть кнопку…</pre>
+  <script>
+    const API = "http://localhost:3000";
+    const out = document.getElementById("out");
+
+    document.getElementById("simple").onclick = async () => {
+      try {
+        const res = await fetch(`${API}/api/tickets?pageSize=2`);
+        out.textContent = `${res.status} ${res.statusText}\n` + JSON.stringify(await res.json(), null, 2);
+      } catch (e) {
+        out.textContent = `Помилка: ${e.message}\nДив. повідомлення в Console (F12).`;
+      }
+    };
+
+    document.getElementById("preflight").onclick = async () => {
+      try {
+        const login = await fetch(`${API}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "m.koval@college.example.ua", password: "teacher123" }),
+        });
+        const { accessToken } = await login.json();
+        const res = await fetch(`${API}/api/tickets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({ title: "Заявка зі стороннього сайту", priority: "low" }),
+        });
+        out.textContent = `${res.status} ${res.statusText}\nLocation: ${res.headers.get("Location")}\n` + JSON.stringify(await res.json(), null, 2);
+      } catch (e) {
+        out.textContent = `Помилка: ${e.message}\nДив. повідомлення в Console (F12).`;
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "helpdesk-http-lab",
+  "version": "1.0.0",
+  "description": "Практична робота № 3. Лабораторний HTTP-сервер служби підтримки для аналізу HTTP-взаємодії",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --watch --env-file-if-exists=.env server.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "MIT"
+}

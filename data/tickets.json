@@ -1,0 +1,8 @@
+[
+  { "id": 1, "title": "Не працює проєктор в ауд. 214", "description": "Немає сигналу з HDMI", "status": "open", "priority": "high", "authorId": 2, "assigneeId": 3, "createdAt": "2026-09-01T08:15:00Z", "tags": ["обладнання", "аудиторія"] },
+  { "id": 2, "title": "Доступ до Wi-Fi для групи 456-Д", "status": "in_progress", "priority": "medium", "authorId": 1, "assigneeId": 3, "createdAt": "2026-09-02T10:40:00Z", "tags": ["мережа"] },
+  { "id": 3, "title": "Встановити Node.js 24 у лабораторії 305", "description": "Потрібно для практичних робіт з РКСЗ", "status": "resolved", "priority": "high", "authorId": 2, "assigneeId": 3, "createdAt": "2026-08-28T12:00:00Z", "tags": ["ПЗ", "лабораторія"] },
+  { "id": 4, "title": "Не друкує принтер у бібліотеці", "status": "open", "priority": "low", "authorId": 1, "assigneeId": null, "createdAt": "2026-09-03T09:05:00Z", "tags": ["обладнання"] },
+  { "id": 5, "title": "Скидання пароля до Moodle", "status": "closed", "priority": "critical", "authorId": 1, "assigneeId": 3, "createdAt": "2026-08-30T07:30:00Z", "tags": ["облікові записи"] },
+  { "id": 6, "title": "Оновити антивірус на викладацьких ПК", "status": "open", "priority": "medium", "authorId": 3, "assigneeId": null, "createdAt": "2026-09-04T14:20:00Z", "tags": ["ПЗ", "безпека"] }
+]

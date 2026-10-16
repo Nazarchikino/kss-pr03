@@ -1,0 +1,128 @@
+{
+  "info": {
+    "_postman_id": "9a73a42e-3c04-593b-975b-e83e8c10941d",
+    "name": "helpdesk-lab – ПР3",
+    "description": "Стартова колекція до практичної роботи № 3. Додавайте запити й тести за методичними вказівками.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Основи",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Код стану 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Автентифікація",
+      "item": [
+        {
+          "name": "Вхід здобувача",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"a.petrenko@college.example.ua\",\n  \"password\": \"student123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "3. Заявки: читання",
+      "item": [
+        {
+          "name": "Список заявок",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets?page=1&pageSize=4",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "4. Заявки: зміна",
+      "item": []
+    },
+    {
+      "name": "5. Механізми HTTP",
+      "item": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "studentToken",
+      "value": ""
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+[
+  { "id": 1, "fullName": "Петренко Андрій Іванович", "email": "a.petrenko@college.example.ua", "role": "student" },
+  { "id": 2, "fullName": "Коваль Марія Олегівна", "email": "m.koval@college.example.ua", "role": "teacher" },
+  { "id": 3, "fullName": "Шевчук Олег Петрович", "email": "o.shevchuk@college.example.ua", "role": "admin" }
+]
